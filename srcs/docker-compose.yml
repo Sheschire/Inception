@@ -1,0 +1,37 @@
+version: '3'
+services:
+  mysql:
+    image: mariadb
+    volumes:
+      - /data/mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: mysql_root_pass
+      MYSQL_DATABASE: db_name
+      MYSQL_USER: user_name
+      MYSQL_PASSWORD: user_pass
+    restart: always
+  wordpress:
+    image: wordpress:php7.3-fpm-alpine
+    volumes:
+      - /data/html:/var/www/html              # mount the volume with the host machine path
+    depends_on:
+      - mysql                                 # wordpress service depends on the mysql service. start and stop in dependency order
+    environment:
+      WORDPRESS_DB_HOST: mysql                # |
+      MYSQL_ROOT_PASSWORD: mysql_root_pass    # |
+      WORDPRESS_DB_NAME: db_name              # | Need to correspond to mariadb env variables
+      WORDPRESS_DB_USER: user_name            # |
+      WORDPRESS_DB_PASSWORD: user_pass        # |
+      WORDPRESS_TABLE_PREFIX: wp_
+    links:
+      - mysql                                  # enable wordpress to communicate with mysql
+    restart: always
+  nginx:
+    image: nginx:debian
+    volumes:
+      - nginx:/etc/nginx/conf.d
+      - /data/html:/var/www/html
+    ports:
+      - 8080:80
+    links:
+      - wordpress                               # enable wordpress to communicate with nginx
