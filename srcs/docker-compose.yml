@@ -1,37 +1,70 @@
 version: '3'
+
 services:
-  mysql:
-    image: mariadb
-    volumes:
-      - /data/mysql:/var/lib/mysql
+  db:
+          # image: mariadb:10.3 #create a Dockerfile
+    container_name: db
+    build:
+       dockerfile: Dockerfile
+       context: ./requirements/mariadb
+    restart: unless-stopped
+    env_file: .env
     environment:
-      MYSQL_ROOT_PASSWORD: mysql_root_pass
-      MYSQL_DATABASE: db_name
-      MYSQL_USER: user_name
-      MYSQL_PASSWORD: user_pass
-    restart: always
+      - MYSQL_DATABASE=wordpress
+      - MY_SQL_ROOT_PASSWORD=wordpress
+      - MY_SQL_USER=wordpress
+      - MY_SQL_PASSWORD=wordpress
+        # ports:
+        #   - "3306:3306"
+    volumes:
+      - dbdata:/var/lib/mysql/
+        # command: '--default-authentication-plugin=mysql_native_password'
+    networks:
+      - inception-network
+
   wordpress:
-    image: wordpress:php7.3-fpm-alpine
-    volumes:
-      - /data/html:/var/www/html              # mount the volume with the host machine path
     depends_on:
-      - mysql                                 # wordpress service depends on the mysql service. start and stop in dependency order
+      - db
+        # image: wordpress:5.7.2-fpm
+    container_name: wordpress
+    build:
+       dockerfile: Dockerfile
+       context: ./requirements/wordpress
+    restart: unless-stopped
+    env_file: .env
     environment:
-      WORDPRESS_DB_HOST: mysql                # |
-      MYSQL_ROOT_PASSWORD: mysql_root_pass    # |
-      WORDPRESS_DB_NAME: db_name              # | Need to correspond to mariadb env variables
-      WORDPRESS_DB_USER: user_name            # |
-      WORDPRESS_DB_PASSWORD: user_pass        # |
-      WORDPRESS_TABLE_PREFIX: wp_
-    links:
-      - mysql                                  # enable wordpress to communicate with mysql
-    restart: always
-  nginx:
-    image: nginx:debian
+      - WORDPRESS_DB_HOST=db:3306
+      - WORDPRESS_DB_USER=$MYSQL_USER
+      - WORDPRESS_DB_PASSWORD=$MYSQL_PASSWORD
+      - WORDPRESS_DB_NAME=wordpress
     volumes:
-      - nginx:/etc/nginx/conf.d
-      - /data/html:/var/www/html
+      - wordpress:/var/www/html
+        #- ./start.sh:/usr/local/bin/start.sh
+    networks:
+      - inception-network
+        #command: /usr/local/bin/start.sh
+
+  nginx:
+    depends_on:
+      - wordpress
+    build:
+      dockerfile: Dockerfile
+      context: ./requirements/nginx
+    container_name: nginx
+    restart: unless-stopped
     ports:
-      - 8080:80
-    links:
-      - wordpress                               # enable wordpress to communicate with nginx
+      # - "80:80"
+      - "443:443"
+    volumes:
+      - wordpress:/var/www/html
+      - ./requirements/nginx/conf:/etc/nginx/conf.d
+    networks:
+      - inception-network
+
+volumes:
+  wordpress:
+  dbdata:
+
+networks:
+  inception-network:
+    driver: bridge
