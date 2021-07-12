@@ -6,7 +6,7 @@
 #    By: tlemesle <tlemesle@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/07/12 20:21:36 by tlemesle          #+#    #+#              #
-#    Updated: 2021/07/12 21:23:48 by tlemesle         ###   ########.fr        #
+#    Updated: 2021/07/12 21:58:39 by tlemesle         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -51,4 +51,4 @@ COPY ./conf/init_wordpress.sh .
 
 EXPOSE 9000
 
-CMD ["bash","init.sh"]
+CMD ["bash","init_wordpress.sh"]
