@@ -29,7 +29,5 @@ RUN mkdir /etc/nginx/ssl
 
 # SSL Certificate Setting
 RUN openssl req -x509 -nodes -days 365 -subj "/CN=tlemesle" -newkey rsa:2048 -keyout /etc/ssl/nginx-mykey.key -out /etc/ssl/nginx-mycert.crt;
-     
-EXPOSE 443
 
 CMD ["nginx", "-g", "daemon off;"]
