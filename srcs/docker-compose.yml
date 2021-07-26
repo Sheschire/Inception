@@ -24,8 +24,6 @@ services:
     build:
        dockerfile: Dockerfile
        context: ./wordpress
-    ports:
-      - "9000:80"
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: password
